@@ -21,9 +21,11 @@ root.title("Real Estate Game")
 
 
 #Classes
+
+# auxiliary class to calculate the value of a property
 class Property:
 
-    def __init__(self, plot_base_value, house_base_value, house_condition, security, education, transportation, neighborhood):
+    def __init__(self, plot_base_value, house_base_value, house_condition, security, education, transportation, neighborhood):  # initialize the parameters
         self.plot_base_value = plot_base_value
         self.house_base_value = house_base_value
         self.house_condition = house_condition
@@ -32,7 +34,8 @@ class Property:
         self.transportation = transportation
         self.neighborhood = neighborhood
 
-    def calculate_combined_value(self):
+    # calculate the value of a property
+    def calculate_combined_value(self):  # calculate the value of a property
         house_true_value = (self.house_condition / 500) * self.house_base_value
         combined_value = (self.plot_base_value + house_true_value) * (
                 (self.security + self.education + self.transportation + self.neighborhood) / 2000)
@@ -54,9 +57,8 @@ for listing in range(len(all_data)):
 
 
 # functions
-# ideas: buying plots; building houses, flats, skyscrapers on plots; taking loans; simulating house prices on different values(neighboorhood, education, transportation, security, condition); simulating an economy with crashes etc.; different locations can have different modificators(tech city, vacation destination, industrial city, high wealth city, dense city, rural etc.); calculate supply and demand of the poperty market/rental market
-# introduce Kaufpreisnebenkoste(legal fees, renovation cost etc.)
-# buy the house based on the player input buying price
+
+# progress one week and execute functions. Also create an annual statement of accounts at the end of the year
 def simulate_week():
     global week, year
     if week >= 52:
@@ -82,7 +84,10 @@ def simulate_week():
     #country_economy_changes()
 
 
+# open a new window, which shows all the houses which are available with their price
 def view_property_market():
+
+    # load all the houses which are available for sale into a listbox
     def load_houses_property_market():
         listbox_house_price_sellings.delete(0, tkinter.END)
         listbox_id_sellings.delete(0, tkinter.END)
@@ -104,6 +109,7 @@ def view_property_market():
             listbox_house_price_sellings.insert(tkinter.END, combined_value)
             listbox_id_sellings.insert(tkinter.END, all_data[listing][0])
 
+    # buy a house for the stated value in the listbox(might change that, that the player can offer a specific amount and negotiate with the seller)
     def buy_house():
         try:
             rowid = listbox_id_sellings.get(listbox_house_price_sellings.curselection()[0])
@@ -157,7 +163,10 @@ def view_property_market():
     load_houses_property_market()
 
 
+# open a new window, which shows all the houses which are owned by the player
 def view_player_owned_properties():
+
+    # load all the houses which are owned by the player into a listbox
     def load_houses_player_owned():
         listbox_house_price_player_house.delete(0, tkinter.END)
         listbox_id_player_house.delete(0, tkinter.END)
@@ -180,10 +189,12 @@ def view_player_owned_properties():
             listbox_id_player_house.insert(tkinter.END, all_data[listing][0])
 
 
+    # selling a house owned by the player
     def sell_house():
         try:
             house_id = listbox_id_player_house.get(listbox_house_price_player_house.curselection()[0])
 
+            # open a new window with an entry in which the player can enter a price at which the player wants to sell
             def confirm_price():
                 try:
                     rowid = listbox_id_player_house.get(listbox_house_price_player_house.curselection()[0])
@@ -213,10 +224,12 @@ def view_player_owned_properties():
             tkinter.messagebox.showwarning(title="Warning!", message="You must select a house to sell.")
 
 
+    #  renting a house of the player
     def rent_house():
         try:
             house_id = listbox_id_player_house.get(listbox_house_price_player_house.curselection()[0])
 
+            # open a new window with an entry in which the player can enter an amount at which the player wants to rent the property
             def confirm_rent():
                 try:
                     rowid = listbox_id_player_house.get(listbox_house_price_player_house.curselection()[0])
@@ -246,6 +259,7 @@ def view_player_owned_properties():
             tkinter.messagebox.showwarning(title="Warning!", message="You must select a house to set rent.")
 
 
+    # evicting a tenant from a house owned by the player
     def evict_tenants():
         try:
             rowid_player_house = listbox_id_player_house.get(listbox_house_price_player_house.curselection()[0])
@@ -318,6 +332,7 @@ def listings_leaving_market():
     pass
 
 
+# looking if there is a buyer for the houses for the offered price which the player wants to sell the property
 def search_buyer():
     c.execute(
         "SELECT ROWID, plot_base_value, house_base_value, house_condition, security, education, transportation, neighborhood, asking_price FROM house_database WHERE player_owned = 1")
@@ -348,6 +363,7 @@ def random_offer():
     pass
 
 
+# # looking if there is a tenant for the houses for the offered rent at which the player wants to rent the property
 def search_tenant():
     c.execute("SELECT ROWID, asking_rent, rent FROM house_database WHERE player_owned = 1")
     search_tenant_data = c.fetchall()
@@ -375,6 +391,7 @@ def search_tenant():
                               {'rent': asking_rent, 'ROWID': rowid})
 
 
+# looking if a tenant wants to leave a rented house be cause it got to expansive for the offered value of the property
 def tenant_leaves():
     c.execute(
         "SELECT ROWID, plot_base_value, house_base_value, house_condition, security, education, transportation, neighborhood, rent FROM house_database WHERE player_owned = 1")
@@ -397,6 +414,7 @@ def tenant_leaves():
                       {'rent': 0, 'ROWID': rowid})
 
 
+# calculating the available money of the player by adding all transactions from the player_account table
 def calculate_money():
     global money
     money = 0
@@ -408,6 +426,7 @@ def calculate_money():
     money_label.config(text=money)
 
 
+# calculating the interest if the player has overdrawn his account
 def overdraft_interest():
     global money
     interest_rate = 0.089 / 12
@@ -417,6 +436,7 @@ def overdraft_interest():
             c.execute("INSERT INTO player_account VALUES (:transactions)", {'transactions': interest})
 
 
+# adding the rent of the rented houses of the player to the player_account table
 def collect_rent():
     c.execute("SELECT ROWID, rent FROM house_database WHERE player_owned = 1")
     all_data = c.fetchall()
@@ -428,6 +448,7 @@ def collect_rent():
                 c.execute("INSERT INTO player_account VALUES (:transactions)", {'transactions': house_rent})
 
 
+# creating an annual finacial report
 def create_annual_report():
     c.execute("SELECT transactions FROM player_account")
     all_transactions = c.fetchall()
@@ -461,6 +482,7 @@ def house_price_changes():
                       {'base_value': house_price, 'ROWID': house_id})
 
 
+# changing the values of the economy to change the prices of the houses
 def country_economy_changes():
     c.execute("SELECT ROWID, country_economy_multiplier FROM country")
     all_data = c.fetchall()
@@ -479,6 +501,8 @@ def country_economy_changes():
                 "UPDATE country SET country_economy_multiplier = (:country_economy_multiplier) WHERE ROWID = (:ROWID)",
                 {'country_economy_multiplier': country_economy_multiplier, 'ROWID': rowid})
 
+
+# quick test if the change is not to high or to low during growth and crisis times
 country_economy_multiplier = 1
 tet_year = 0
 def country_economy_test():
@@ -495,6 +519,8 @@ def country_economy_test():
     print(country_economy_multiplier)
     print(tet_year)
 
+
+# changing the values of the regional economy to change the prices of the houses
 def region_economy_changes():
     c.execute("SELECT region_economy_multiplier, region_density_multiplier, primary_sector, secondary_sector, tertiary_sector, quaternary_sector FROM region")
     all_data = c.fetchall()
@@ -508,6 +534,7 @@ def region_economy_changes():
     pass
 
 
+# changing the local factors to change the value of the houses
 def local_factors_changes():
     c.execute("SELECT local_density_multiplier, security, education, transportation, neighborhood FROM local")
     all_data = c.fetchall()
@@ -523,6 +550,11 @@ def local_factors_changes():
 
 # if the player has overdrawn his account for 12 consecutive weeks, the game ends
 def game_over():
+    global game_over_counter
+    if money <= 0:
+        game_over_counter += 1
+    if game_over_counter >= 12:
+        tkinter.messagebox.showwarning(title="Game over!", message="You have overdrawn you account for too long. The bank has seized all your properties.")
     pass
 
 
